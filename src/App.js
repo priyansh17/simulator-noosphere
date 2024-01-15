@@ -114,9 +114,9 @@ const MyApp = () => {
     setShowModal(false);
   };
 
-  const removeFromNodes = (filteredNodes) => {
-    setNodes((prevNodes) => prevNodes.filter((node) => !filteredNodes.some((filteredNode) => filteredNode.name === node.name)));
-  };
+  // const removeFromNodes = (filteredNodes) => {
+  //   return nodes.filter((node) => !filteredNodes.some((filteredNode) => filteredNode.name === node.name));
+  // };
 
   const reducePriority = (currentPriority, priorityList) => {
     const currentIndex = priorityList.indexOf(currentPriority);
@@ -273,6 +273,26 @@ const MyApp = () => {
     }
 
     // step 3:
+    // now we have to filter out first nodes which don't have any special tags:
+    let requiredNodesCount = payload.Nodes - poolProperties.maxSpecialTagNodes;
+    console.log("More ", requiredNodesCount, " nodes required.")
+    // using empty list in special tags ensures we don't select filter nodes
+    let commonNodes = selectSpecialNodes(availableNodes, []);
+    if (commonNodes.length < requiredNodesCount) {
+      handleNotEnoughNodes();
+      return;
+    } else {
+      selectedNodes = selectNodes(sizeType, storageType, poolProperties.strictProvisioning, requiredNodesCount, commonNodes);
+      // removing the selected nodes from all nodes.
+      availableNodes = availableNodes.filter((node) => !selectedNodes.some((filteredNode) => filteredNode.name === node.name));
+    }
+
+    setNodesFilter2(selectedNodes);
+
+    if (selectedNodes.length < requiredNodesCount) {
+      handleNotEnoughNodes();
+      return;
+    }
   }
 
 
@@ -360,23 +380,23 @@ const MyApp = () => {
         <Col className="border border-primary">
           <h2>Payload</h2>
           <Form>
-            <Form.Group controlId="noOfNodes">
+            <Form.Group controlId="Nodes">
               <Form.Label>No. of Nodes</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter No. of Nodes"
-                name="no-of-nodes"
+                name="Nodes"
                 value={payload.Nodes}
                 onChange={handlePayloadChange}
               />
             </Form.Group>
 
-            <Form.Group controlId="poolName">
+            <Form.Group controlId="PoolName">
               <Form.Label>Pool Name</Form.Label>
               <Form.Control
                 type="text"
                 placeholder="Enter Pool Name"
-                name="pool-name"
+                name="PoolName"
                 value={payload.PoolName}
                 onChange={handlePayloadChange}
               />
