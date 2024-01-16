@@ -39,6 +39,7 @@ const MyApp = () => {
     spec: 'ssd-xl',
     specialTags: ['gpu'],
     strictProvisioning: true,
+    allSpecialNodes: false,
     maxSpecialTagNodes: '2',
     teamTag: 'field',
   });
@@ -252,8 +253,13 @@ const MyApp = () => {
     let availableNodes = teamFilterNodes;
     let selectedNodes = []
 
+    let requiredSpecialNodes = poolProperties.maxSpecialTagNodes
+    if (poolProperties.allSpecialNodes) {
+      requiredSpecialNodes = payload.Nodes;
+    }
+    console.log("special nodes to be fetched:", requiredSpecialNodes);
+
     if (poolProperties.specialTags.length > 0) {
-      let requiredSpecialNodes = poolProperties.maxSpecialTagNodes
 
       let specialNodes = selectSpecialNodes(availableNodes, poolProperties.specialTags)
       if (specialNodes.length < requiredSpecialNodes) {
@@ -264,17 +270,17 @@ const MyApp = () => {
         // removing the selected nodes from all nodes.
         availableNodes = availableNodes.filter((node) => !selectedNodes.some((filteredNode) => filteredNode.name === node.name));
       }
-    }
-    setNodesFilter1(selectedNodes);
+      setNodesFilter1(selectedNodes);
 
-    if (selectedNodes.length < poolProperties.maxSpecialTagNodes) {
-      handleNotEnoughNodes();
-      return;
+      if (selectedNodes.length < requiredSpecialNodes) {
+        handleNotEnoughNodes();
+        return;
+      }
     }
 
     // step 3:
     // now we have to filter out first nodes which don't have any special tags:
-    let requiredNodesCount = payload.Nodes - poolProperties.maxSpecialTagNodes;
+    let requiredNodesCount = payload.Nodes - requiredSpecialNodes;
     console.log("More ", requiredNodesCount, " nodes required.")
     // using empty list in special tags ensures we don't select filter nodes
     let commonNodes = selectSpecialNodes(availableNodes, []);
@@ -337,24 +343,10 @@ const MyApp = () => {
               />
             </Form.Group>
 
-            <Form.Group controlId="strictProvisioning">
-              <Form.Check
-                type="checkbox"
-                label="Strict Provisioning"
-                name="strictProvisioning"
-                checked={poolProperties.strictProvisioning}
-                onChange={() => {
-                  setPoolProperties((prevData) => ({
-                    ...prevData,
-                    strictProvisioning: !poolProperties.strictProvisioning,
-                  }));
-                }}
-              />
-            </Form.Group>
-
             <Form.Group controlId="maxSpecialTagNodes">
-              <Form.Label>Max Special Tagged Nodes</Form.Label>
+              <Form.Label>Special Tagged Nodes</Form.Label>
               <Form.Control
+                disabled={poolProperties.allSpecialNodes}
                 type="text"
                 placeholder="Count of special nodes"
                 name="maxSpecialTagNodes"
@@ -374,6 +366,35 @@ const MyApp = () => {
               />
             </Form.Group>
 
+            <Form.Group controlId="strictProvisioning">
+              <Form.Check
+                type="checkbox"
+                label="Strict Provisioning"
+                name="strictProvisioning"
+                checked={poolProperties.strictProvisioning}
+                onChange={() => {
+                  setPoolProperties((prevData) => ({
+                    ...prevData,
+                    strictProvisioning: !poolProperties.strictProvisioning,
+                  }));
+                }}
+              />
+            </Form.Group>
+
+            <Form.Group controlId="allSpecialNodes">
+              <Form.Check
+                type="checkbox"
+                label="Max Special Nodes"
+                name="allSpecialNodes"
+                checked={poolProperties.allSpecialNodes}
+                onChange={() => {
+                  setPoolProperties((prevData) => ({
+                    ...prevData,
+                    allSpecialNodes: !poolProperties.allSpecialNodes,
+                  }));
+                }}
+              />
+            </Form.Group>
           </Form>
         </Col>
 
